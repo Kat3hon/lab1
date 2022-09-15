@@ -148,9 +148,9 @@ int D_Random(Matrix **matr) {
             std::cout << sparseMatrix::errList(num-1) << std::endl;
             return 1;
         }
-        if (amount < 0 || amount >= ((*matr)->lines)*((*matr)->columns))
+        if (amount <= 0 || amount > ((*matr)->lines)*((*matr)->columns)/(1.5))
             std::cout << sparseMatrix::errList(2) << std::endl;
-    } while (amount <= 0 || amount > ((*matr)->lines)*((*matr)->columns));
+    } while (amount <= 0 || amount > ((*matr)->lines)*((*matr)->columns)/(1.5));
 
     srand(time(NULL));
     while (amount > 0) {
@@ -160,10 +160,9 @@ int D_Random(Matrix **matr) {
         int n = insert(*matr, value, i, j, true);
         if (n == 1)
             return 1;
-        if (n == -1) {
-	    std::cout << "here" << std::endl;
+        if (n == 2) 
             amount++;
-	}
+	
         amount--;
     }
     return 0;

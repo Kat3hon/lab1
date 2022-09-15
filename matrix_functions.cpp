@@ -175,7 +175,7 @@ int sparseMatrix::insert(Matrix *matr, int value, int i, int j, bool isR) {
                         std::cout << sparseMatrix::errList(3) << std::endl;
                     	return 0;
 	            }
-		    else return -1;
+		    return 2;
                 }
                 Node* ptrNode = nullptr;
                 try {
