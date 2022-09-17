@@ -3,18 +3,17 @@
 using namespace sparseMatrix;
 
 char* sparseMatrix::errList(int num) {
-    char* err[] = {"Error! Wrong value! Breaking...", "End of file! Breaking...", "Incorrect value! Try again!",
-                   "There is already that element in matrix! Try again!", "Matrix is already empty. Try again!",
-                   "Error! Repeat...", "Error! Bad alloc! Breaking..."};
+    char* err[] = {"Incorrect value! Try again!", "There is already that element in matrix! Try again!", 
+		   "Matrix is already empty. Try again!"};
     return err[num];
 }
 
 int sparseMatrix::getInt(int &x){
     std::cin >> x;
     if (std::cin.fail())
-            throw 1;
+            throw std::runtime_error("Error! Wrong value!");
     if (std::cin.eof())
-            throw 2;
+            throw std::runtime_error("End of file! Breaking");
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     return 0;
 }
@@ -22,15 +21,9 @@ int sparseMatrix::getInt(int &x){
 int sparseMatrix::init(int& value, const char* msg) {
     do {
         std::cout << msg << std::endl;
-        try {
-            getInt(value);
-        }
-        catch (int num) {
-            std::cout << sparseMatrix::errList(num-1) << std::endl;
-            return 1;
-        }
+        getInt(value);
         if (value <= 0)
-            std::cout << sparseMatrix::errList(2) << std::endl;
+            std::cout << sparseMatrix::errList(0) << std::endl;
     } while (value <= 0);
     return 0;
 }
@@ -48,30 +41,24 @@ int sparseMatrix::numD(int value) {
     return count;
 }
 
-bool sparseMatrix::isEmpty(const Matrix *matr) {
-    if (matr == nullptr)
-        return true;
-    return false;
+bool sparseMatrix::isEmpty(const Matrix& matr) {
+    if (matr.columns != 0 || matr.lines != 0)
+        return false;
+    return true;
 }
 
-Matrix * sparseMatrix::createMatr(int i, int j) {
-    Matrix *matr = new Matrix();
-    matr->lines = i;
-    matr->columns = j;
-    return matr;
+void sparseMatrix::createMatr(Matrix &matr, int i, int j) {
+    matr.lines = i;
+    matr.columns = j;
 }
 
-Matrix * sparseMatrix::createMatr() {
-    Matrix *matr = new Matrix();
-    if(init(matr->lines, "Enter an amount of lines:"))
-        return nullptr;
-    if(init(matr->columns,"Enter an amount of columns:"))
-        return nullptr;
-    return matr;
+void sparseMatrix::createMatr(Matrix& matr) {
+    init(matr.lines, "Enter an amount of lines:");
+    init(matr.columns,"Enter an amount of columns:");
 }
 
-List * sparseMatrix::createList(int i) {
-    List *ptr = new List();
+List* sparseMatrix::createList(int i) {
+    List* ptr = new List();
     ptr->count = 0;
     ptr->line = i;
     ptr->avgD = 0;
@@ -80,8 +67,8 @@ List * sparseMatrix::createList(int i) {
     return ptr;
 }
 
-Node * sparseMatrix::createNode(int value, int i, int j) {
-    Node *ptr = new Node();
+Node* sparseMatrix::createNode(int value, int i, int j) {
+    Node* ptr = new Node();
     ptr->ptrNext = nullptr;
     ptr->value = value;
     ptr->column = j;
@@ -111,16 +98,16 @@ void sparseMatrix::ordering (List *ptrMainHead, Node *newNode) {
     return;
 }
 
-void sparseMatrix::ordering(Matrix *matr, List *newList) {
-    List *ptrMainHead = matr->head;
+void sparseMatrix::ordering(Matrix &matr, List *newList) {
+    List *ptrMainHead = matr.head;
     List *prevMainHead = nullptr;
     while (ptrMainHead != nullptr && ptrMainHead->line < newList->line) {
         prevMainHead = ptrMainHead;
         ptrMainHead = ptrMainHead->ptrNext;
     }
     if (prevMainHead == nullptr) { //push forward
-        newList->ptrNext = matr->head;
-        matr->head = newList;
+        newList->ptrNext = matr.head;
+        matr.head = newList;
         return;
     }
     if (ptrMainHead == nullptr) { //push back
@@ -143,49 +130,26 @@ bool sparseMatrix::isExist(Node* head, int j) {
     return false;
 }
 
-int sparseMatrix::insert(Matrix *matr, int value, int i, int j, bool isR) {
+int sparseMatrix::insert(Matrix& matr, int value, int i, int j, bool isR) {
     if (isEmpty(matr)) { //create the first list
-        try {
-            matr->head = createList(i);
-        }
-        catch(std::bad_alloc) {
-            std::cout << sparseMatrix::errList(6) << std::endl;
-            eraseMatr(matr);
-            return 1;
-        }
+        matr.head = createList(i);
+        matr.head->head = createNode(value,i,j);
 
-        try {
-            matr->head->head = createNode(value,i,j);
-        }
-        catch(std::bad_alloc) {
-            std::cout << sparseMatrix::errList(6) << std::endl;
-            eraseMatr(matr);
-            return 1;
-        }
-
-        (matr->head->count)++;
-        matr->head->avgD = double(((matr->head->avgD)*(matr->head->count - 1)+numD(matr->head->head->value))/(matr->head->count));
+        (matr.head->count)++;
+        matr.head->avgD = double(((matr.head->avgD)*(matr.head->count - 1)+numD(matr.head->head->value))/(matr.head->count));
         return 0;
     }
     else {
-        for (sparseMatrix::List* ptrMainHead = matr->head; ptrMainHead != nullptr; ptrMainHead = ptrMainHead->ptrNext)
+        for (sparseMatrix::List* ptrMainHead = matr.head; ptrMainHead != nullptr; ptrMainHead = ptrMainHead->ptrNext)
             if (ptrMainHead->line == i) { //go to the line #i
                 if (isExist(ptrMainHead->head, j)) {
                     if (!isR) {
-                        std::cout << sparseMatrix::errList(3) << std::endl;
+                        std::cout << sparseMatrix::errList(1) << std::endl;
                     	return 0;
 	            }
-		    return 2;
+		    return 1;
                 }
-                Node* ptrNode = nullptr;
-                try {
-                    ptrNode = createNode(value,i,j);
-                }
-                catch(std::bad_alloc) {
-                    std::cout << sparseMatrix::errList(6) << std::endl;
-                    eraseMatr(matr);
-                    return 1;
-                }
+                Node* ptrNode = createNode(value, i, j);
                 ordering(ptrMainHead, ptrNode);
                 (ptrMainHead->count)++;
                 ptrMainHead->avgD = double(((ptrMainHead->avgD)*(ptrMainHead->count - 1)+numD(ptrNode->value))/(ptrMainHead->count));
@@ -193,25 +157,9 @@ int sparseMatrix::insert(Matrix *matr, int value, int i, int j, bool isR) {
             }
 
         //line was not found
-        List* newList = nullptr;
-        try {
-            newList = createList(i);
-        }
-        catch(std::bad_alloc) {
-            std::cout << sparseMatrix::errList(6) << std::endl;
-            eraseMatr(matr);
-            return 1;
-        }
+        List* newList = createList(i);
         ordering(matr, newList);
-        Node* newNode = nullptr;
-        try {
-            newNode = createNode(value,i,j);
-        }
-        catch(std::bad_alloc) {
-            std::cout << sparseMatrix::errList(6) << std::endl;
-            eraseMatr(matr);
-            return 1;
-        }
+        Node* newNode = createNode(value,i,j);
         newList->head = newNode;
         (newList->count)++;
         newList->avgD = double(((newList->avgD)*(newList->count - 1)+numD(newNode->value))/(newList->count));
@@ -219,12 +167,12 @@ int sparseMatrix::insert(Matrix *matr, int value, int i, int j, bool isR) {
     }
 }
 
-int sparseMatrix::eraseMatr(sparseMatrix::Matrix *matr) {
+void sparseMatrix::eraseMatr(Matrix& matr) {
     if (isEmpty(matr)) {
-        std::cout << sparseMatrix::errList(4) << std::endl;
-        return 0;
+        std::cout << sparseMatrix::errList(2) << std::endl;
+        return;
     }
-    List *ptrMainHead = matr->head;
+    List *ptrMainHead = matr.head;
     List *tmpMainHead = nullptr;
     while (ptrMainHead != nullptr) {
         sparseMatrix::Node *ptrNode = ptrMainHead->head;
@@ -238,12 +186,12 @@ int sparseMatrix::eraseMatr(sparseMatrix::Matrix *matr) {
         delete ptrMainHead;
         ptrMainHead = tmpMainHead;
     }
-    delete matr;
-    return 0;
+    matr.columns = 0;
+    matr.lines = 0;
 }
 
-void sparseMatrix::search(Matrix *matr, Matrix *sideMatr) {
-    for (List *ptrMainHead = matr->head; ptrMainHead != nullptr; ptrMainHead = ptrMainHead->ptrNext)
+void sparseMatrix::search(Matrix& matr, Matrix& sideMatr) {
+    for (List *ptrMainHead = matr.head; ptrMainHead != nullptr; ptrMainHead = ptrMainHead->ptrNext)
         for (Node* ptrNode = ptrMainHead->head; ptrNode != nullptr; ptrNode = ptrNode->ptrNext)
             if (numD(ptrNode->value) > ptrMainHead->avgD)
                 insert(sideMatr, ptrNode->value, ptrMainHead->line, ptrNode->column, false);

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <limits>
+#include <stdexcept>
 
 namespace sparseMatrix {
     typedef struct Node {
@@ -30,11 +31,11 @@ namespace sparseMatrix {
 
     int numD(int value);
 
-    bool isEmpty(const Matrix *matr);
+    bool isEmpty(const Matrix& matr);
 
-    Matrix *createMatr(int i, int j);
+    void createMatr(Matrix &matr, int i, int j);
 
-    Matrix *createMatr();
+    void createMatr(Matrix& matr);
 
     List *createList(int i);
 
@@ -42,15 +43,15 @@ namespace sparseMatrix {
 
     void ordering (List *ptrMainHead, Node* newNode);
 
-    void ordering(Matrix *matr, List* newList);
+    void ordering(Matrix &matr, List* newList);
 
     bool isExist(Node* head, int j);
 
-    int insert(Matrix *matr, int value, int i, int j, bool isR);
+    int insert(Matrix &matr, int value, int i, int j, bool isR);
 
-    int eraseMatr(Matrix *matr);
+    void eraseMatr(Matrix &matr);
 
-    void search(Matrix *matr, Matrix *sideMatr);
+    void search(Matrix &matr, Matrix &sideMatr);
 
     void showColumns(int colsNum, List* list);
 
